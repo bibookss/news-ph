@@ -1,7 +1,7 @@
 import pandas as pd
 import dagster as dg
 from datetime import datetime
-from .abscbn import ABSCBNResource
+from ..resources.abs_cbn import ABSCBNResource
 
 @dg.asset(
     config_schema={
@@ -10,7 +10,7 @@ from .abscbn import ABSCBNResource
         "section_id": str,
     }
 )
-def abs_cbn_news_raw(context: dg.AssetExecutionContext, abs_cbn: ABSCBNResource) -> pd.DataFrame:
+def abs_cbn_article_index_raw(context: dg.AssetExecutionContext, abs_cbn: ABSCBNResource) -> pd.DataFrame:
     cfg = context.op_config
     start = datetime.strptime(cfg["start_datetime"], "%Y%m%d %H%M%S").replace(tzinfo=None)
     end = datetime.strptime(cfg["end_datetime"], "%Y%m%d %H%M%S").replace(tzinfo=None)
@@ -25,9 +25,9 @@ def abs_cbn_news_raw(context: dg.AssetExecutionContext, abs_cbn: ABSCBNResource)
     return pd.DataFrame(news)
 
 @dg.asset
-def abs_cbn_news_detail(abs_cbn_news_raw: pd.DataFrame, abs_cbn: ABSCBNResource) -> pd.DataFrame:
+def abs_cbn_article_detail_raw(abs_cbn_article_index_raw: pd.DataFrame, abs_cbn: ABSCBNResource) -> pd.DataFrame:
     detailed_articles = []
-    for _, row in abs_cbn_news_raw.iterrows():
+    for _, row in abs_cbn_article_index_raw.iterrows():
         slug_url = row["slugline_url"]
         detail = abs_cbn.get_news_by_slugline_url(slug_url)
         detailed_articles.append(detail)

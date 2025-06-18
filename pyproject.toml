@@ -25,7 +25,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.dagster]
-module_name = "news_ph.definitions"
+module_name = "news_ph"
 code_location_name = "news_ph"
 
 [tool.setuptools.packages.find]
