@@ -1,8 +1,11 @@
-import dagster as dg
 from datetime import datetime, timedelta
+
+import dagster as dg
+
 from ..jobs import abs_cbn_job
 
-@dg.schedule(job=abs_cbn_job, cron_schedule="0 1 * * *")  
+
+@dg.schedule(job=abs_cbn_job, cron_schedule="0 1 * * *")
 def abs_cbn_daily_schedule():
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     yesterday = today - timedelta(days=1)
