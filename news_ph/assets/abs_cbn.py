@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 import dagster as dg
@@ -5,7 +6,7 @@ import pandas as pd
 
 from ..resources.abs_cbn import ABSCBNResource
 from .constants import TIMEZONE
-import json
+
 
 @dg.asset(
     config_schema={
@@ -36,10 +37,15 @@ def abs_cbn_article_index_raw(
         context.log.warning("No news articles found in the given time window.")
         return pd.DataFrame(columns=["retrieved_at", "json_response"])
 
-    return pd.DataFrame([{
-        "retrieved_at": datetime.now(tz=TIMEZONE).isoformat(),
-        "json_response": json.dumps(news)
-    }])
+    return pd.DataFrame(
+        [
+            {
+                "retrieved_at": datetime.now(tz=TIMEZONE).isoformat(),
+                "json_response": json.dumps(news),
+            }
+        ]
+    )
+
 
 @dg.asset
 def abs_cbn_article_detail_raw(
@@ -58,14 +64,16 @@ def abs_cbn_article_detail_raw(
     for article in news_list:
         slug_url = article.get("slugline_url")
         if not slug_url:
-            continue  
+            continue
 
         response = abs_cbn.get_news_by_slugline_url(slug_url)
-        detailed_articles.append({
-            "slugline_url": slug_url,
-            "retrieved_at": datetime.now(tz=TIMEZONE).isoformat(),
-            "json_response": json.dumps(response),
-        })
+        detailed_articles.append(
+            {
+                "slugline_url": slug_url,
+                "retrieved_at": datetime.now(tz=TIMEZONE).isoformat(),
+                "json_response": json.dumps(response),
+            }
+        )
 
     if not detailed_articles:
         context.log.warning("No detailed articles fetched.")
