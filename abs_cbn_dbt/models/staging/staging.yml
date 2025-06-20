@@ -2,5 +2,67 @@ version: 2
 
 models:
   - name: stg_abs_cbn_news
-    description: ABS CBN cleaned
-   
+    description: >
+      Cleaned ABS-CBN article data extracted from the raw JSON API response.
+      Includes top-level metadata and body content fields.
+    columns:
+      - name: abs_id
+        description: Unique ABS-CBN-provided article ID.
+      - name: article_uid
+        description: Generated UID using MD5 of headline and published datetime.
+      - name: headline
+        description: Headline of the article.
+      - name: slugline_url
+        description: Slugline-based URL used to fetch article detail.
+      - name: published_at
+        description: Original published timestamp.
+      - name: created_at
+        description: Internal creation timestamp.
+      - name: updated_at
+        description: Internal update timestamp.
+      - name: description
+        description: Short description or summary.
+      - name: language
+        description: Language of the article.
+      - name: profile
+        description: Type or classification of the article.
+      - name: wordcount
+        description: Word count of the article body.
+      - name: body_text_cleaned
+        description: Plain text body with HTML tags stripped.
+      - name: loaded_at
+        description: Timestamp when data was processed by DBT.
+
+  - name: stg_abs_cbn_authors
+    description: >
+      Flattened author data from ABS-CBN articles.
+      Each row represents a single author tied to an article.
+    columns:
+      - name: article_uid
+        description: Foreign key referencing the article.
+      - name: name
+        description: Full name of the author.
+      - name: username
+        description: Username or system identifier.
+      - name: twitter
+        description: Twitter handle.
+      - name: facebook
+        description: Facebook profile URL.
+      - name: avatar_url
+        description: Link to author's avatar image.
+      - name: biography
+        description: Author's biography or bio text.
+
+  - name: stg_abs_cbn_subjects
+    description: >
+      Tags and classification metadata assigned to each article.
+      Each row represents one subject classification per article.
+    columns:
+      - name: article_uid
+        description: Foreign key referencing the article.
+      - name: code
+        description: Code representing the subject tag.
+      - name: name
+        description: Name or label of the subject.
+      - name: scheme
+        description: Classification scheme used (e.g., section_id, iab-category).
