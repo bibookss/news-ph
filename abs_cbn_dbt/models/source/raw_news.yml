@@ -1,0 +1,7 @@
+version: 2
+
+sources:
+  - name: raw_news
+    schema: public
+    tables:
+      - name: abs_cbn_article_detail_raw

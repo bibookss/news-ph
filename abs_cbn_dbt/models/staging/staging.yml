@@ -1,0 +1,6 @@
+version: 2
+
+models:
+  - name: stg_abs_cbn_news
+    description: ABS CBN cleaned
+   
