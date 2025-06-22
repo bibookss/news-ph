@@ -12,6 +12,9 @@ sources:
         description: >
           Raw JSON response for each article retrieved 
           from slugline URLs
+        meta: 
+          dagster:
+            asset_key: ['abs_cbn_article_detail_raw']
 
         freshness:
           warn_after: { count: 12, period: hour }
