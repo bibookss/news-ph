@@ -13,7 +13,8 @@ from .constants import TIMEZONE
         "start_datetime": dg.StringSource,
         "end_datetime": dg.StringSource,
         "section_id": str,
-    }
+    },
+    kinds={"Python"},
 )
 def abs_cbn_article_index_raw(
     context: dg.AssetExecutionContext, abs_cbn: ABSCBNResource
@@ -47,7 +48,7 @@ def abs_cbn_article_index_raw(
     )
 
 
-@dg.asset
+@dg.asset(kinds={"Python"})
 def abs_cbn_article_detail_raw(
     context: dg.AssetExecutionContext,
     abs_cbn_article_index_raw: pd.DataFrame,
