@@ -2,19 +2,20 @@ services:
   # This service runs the postgres DB used by dagster for run storage, schedule storage,
   # and event log storage. Depending on the hardware you run this Compose on, you may be able
   # to reduce the interval and timeout in the healthcheck to speed up your `docker-compose up` times.
-  postgres:
+  dagster_postgres:
     image: postgres:11
     container_name: postgres
-    env_file:
-      - .env
+    environment:
+      POSTGRES_USER: ${DAGSTER_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${DAGSTER_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DAGSTER_POSTGRES_DB}
     networks:
-      - network
+      - dagster_network
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      test: ['CMD-SHELL', 'pg_isready -U ${DAGSTER_POSTGRES_USER} -d ${DAGSTER_POSTGRES_DB}']
       interval: 10s
-      timeout: 5s
+      timeout: 8s
       retries: 5
-      start_period: 20s
 
   # This service runs the gRPC server that loads your user code, in both dagster-webserver
   # and dagster-daemon. By setting DAGSTER_CURRENT_IMAGE to its own image, we tell the
@@ -22,24 +23,33 @@ services:
   # Multiple containers like this can be deployed separately - each just needs to run on
   # its own port, and have its own entry in the workspace.yaml file that's loaded by the
   # webserver.
-  news_ph:
+  dagster_pipeline:
     build:
       context: .
-      dockerfile: ./news_ph.Dockerfile
-    container_name: news_ph
-    image: news_ph_image
+      dockerfile: ./pipeline.Dockerfile
+    container_name: pipeline
+    image: dagster_pipeline
     restart: always
-    env_file:
-      - .env
+    environment:
+      DAGSTER_POSTGRES_USER: ${DAGSTER_POSTGRES_USER}
+      DAGSTER_POSTGRES_PASSWORD: ${DAGSTER_POSTGRES_PASSWORD}
+      DAGSTER_POSTGRES_DB: ${DAGSTER_POSTGRES_DB}
+      DUCKDB_PATH: ${DUCKDB_PATH}
+      DBT_PROJECT_DIR: ${DBT_PROJECT_DIR}
+      DBT_MANIFEST_PATH: ${DBT_MANIFEST_PATH}
+      TIMEZONE: ${TIMEZONE}
+      DAGSTER_DBT_PARSE_PROJECT_ON_LOAD: ${DAGSTER_DBT_PARSE_PROJECT_ON_LOAD}
+      DAGSTER_CURRENT_IMAGE: dagster_pipeline
     networks:
-      - network
+      - dagster_network
     volumes:
-      - duckdb_data:/opt/dagster/data
+      - /Users/albperez/Projects/news-ph/duckdb_data:/opt/dagster/data
+
 
   # This service runs dagster-webserver, which loads your user code from the user code container.
   # Since our instance uses the QueuedRunCoordinator, any runs submitted from the webserver will be put on
   # a queue and later dequeued and launched by dagster-daemon.
-  webserver:
+  dagster_webserver:
     build:
       context: .
       dockerfile: ./dagster.Dockerfile
@@ -56,23 +66,25 @@ services:
       - '3000'
     ports:
       - '3000:3000'
-    env_file:
-      - .env
+    environment:
+      DAGSTER_POSTGRES_USER:  ${DAGSTER_POSTGRES_USER}
+      DAGSTER_POSTGRES_PASSWORD:  ${DAGSTER_POSTGRES_PASSWORD}
+      DAGSTER_POSTGRES_DB:  ${DAGSTER_POSTGRES_DB}
     volumes: # Make docker client accessible so we can terminate containers from the webserver
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/io_manager_storage:/tmp/io_manager_storage
-      - duckdb_data:/opt/dagster/data
+      - /Users/albperez/Projects/news-ph/duckdb_data:/opt/dagster/data
     networks:
-      - network
+      - dagster_network
     depends_on:
-      postgres:
+      dagster_postgres:
         condition: service_healthy
-      news_ph:
+      dagster_pipeline:
         condition: service_started
 
   # This service runs the dagster-daemon process, which is responsible for taking runs
   # off of the queue and launching them, as well as creating runs from schedules or sensors.
-  daemon:
+  dagster_daemon:
     build:
       context: .
       dockerfile: ./dagster.Dockerfile
@@ -81,24 +93,29 @@ services:
       - run
     container_name: daemon
     restart: on-failure
-    env_file:
-      - .env
+    environment:
+      DAGSTER_POSTGRES_USER: ${DAGSTER_POSTGRES_USER}
+      DAGSTER_POSTGRES_PASSWORD: ${DAGSTER_POSTGRES_PASSWORD}
+      DAGSTER_POSTGRES_DB: ${DAGSTER_POSTGRES_DB}
+      DUCKDB_PATH: ${DUCKDB_PATH}
+      DBT_PROJECT_DIR: ${DBT_PROJECT_DIR}
+      DBT_MANIFEST_PATH: ${DBT_MANIFEST_PATH}
+      TIMEZONE: ${TIMEZONE}
+      DAGSTER_DBT_PARSE_PROJECT_ON_LOAD: ${DAGSTER_DBT_PARSE_PROJECT_ON_LOAD}
     volumes: # Make docker client accessible so we can launch containers using host docker
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/io_manager_storage:/tmp/io_manager_storage
-      - duckdb_data:/opt/dagster/data
+      - /Users/albperez/Projects/news-ph/duckdb_data:/opt/dagster/data
     networks:
-      - network
+      - dagster_network
     depends_on:
-      postgres:
+      dagster_postgres:
         condition: service_healthy
-      news_ph:
+      dagster_pipeline:
         condition: service_started
 
 networks:
-  network:
+  dagster_network:
     driver: bridge
     name: network
-
-volumes:
-  duckdb_data:  
+    

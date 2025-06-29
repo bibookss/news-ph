@@ -25,14 +25,15 @@ run_launcher:
       - DBT_PROJECT_DIR
       - DBT_MANIFEST_PATH
       - TIMEZONE
+      - DAGSTER_DBT_PARSE_PROJECT_ON_LOAD
     network: network
     container_kwargs:
       auto_remove: True
       volumes: # Make docker client accessible to any launched containers as well
         - /var/run/docker.sock:/var/run/docker.sock
         - /tmp/io_manager_storage:/tmp/io_manager_storage
-        - duckdb_data:/opt/dagster/data
-
+        - /Users/albperez/Projects/news-ph/duckdb_data:/opt/dagster/data
+        
 run_storage:
   module: dagster_postgres.run_storage
   class: PostgresRunStorage

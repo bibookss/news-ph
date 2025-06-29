@@ -1,5 +1,5 @@
 load_from:
   - grpc_server:
-      host: news_ph
+      host: dagster_pipeline
       port: 4000
-      location_name: 'news_ph'
+      location_name: 'dagster_pipeline'
